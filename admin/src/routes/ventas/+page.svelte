@@ -135,7 +135,7 @@
 
 		// Reset fiscal form
 		fiscalRfc = sale.customerRfc || '';
-		fiscalLegalName = '';
+		fiscalLegalName = sale.customerName || '';
 		fiscalZip = '';
 		fiscalTaxSystem = '';
 		fiscalCfdiUse = 'G03';
