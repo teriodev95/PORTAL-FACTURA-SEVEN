@@ -400,16 +400,33 @@
 				{#if parseItems(selectedSale.itemsJson).length > 0}
 					<div>
 						<p class="text-xs text-gray-muted mb-2">Conceptos</p>
-						<div class="bg-dark-input border border-dark-border rounded-lg divide-y divide-dark-border">
-							{#each parseItems(selectedSale.itemsJson) as item}
-								<div class="px-3 py-2 flex items-center justify-between text-sm">
-									<div class="flex-1 min-w-0">
-										<p class="text-white truncate">{item.description}</p>
-										<p class="text-xs text-gray-muted">{item.quantity} x {fmtCurrency.format(item.unitPrice)}</p>
-									</div>
-									<p class="text-white font-medium ml-3 shrink-0">{fmtCurrency.format(item.salePrice)}</p>
-								</div>
-							{/each}
+						<div class="bg-dark-input border border-dark-border rounded-lg overflow-hidden">
+							<table class="w-full text-sm">
+								<thead>
+									<tr class="border-b border-dark-border">
+										<th class="text-left text-[10px] text-gray-muted font-medium uppercase tracking-wider px-3 py-2">Descripción</th>
+										<th class="text-center text-[10px] text-gray-muted font-medium uppercase tracking-wider px-2 py-2 w-12">Cant.</th>
+										<th class="text-right text-[10px] text-gray-muted font-medium uppercase tracking-wider px-2 py-2 w-24">P. Unit.</th>
+										<th class="text-right text-[10px] text-gray-muted font-medium uppercase tracking-wider px-3 py-2 w-24">Importe</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each parseItems(selectedSale.itemsJson) as item}
+										<tr class="border-b border-dark-border/40 last:border-0">
+											<td class="px-3 py-2.5 text-white text-xs leading-relaxed">{item.description}</td>
+											<td class="px-2 py-2.5 text-center text-gray-muted">{item.quantity}</td>
+											<td class="px-2 py-2.5 text-right text-gray-muted whitespace-nowrap">{fmtCurrency.format(item.unitPrice)}</td>
+											<td class="px-3 py-2.5 text-right text-white font-medium whitespace-nowrap">{fmtCurrency.format(item.salePrice)}</td>
+										</tr>
+									{/each}
+								</tbody>
+								<tfoot>
+									<tr class="border-t border-dark-border">
+										<td colspan="3" class="px-3 py-2.5 text-right text-xs text-gray-muted font-medium">Total</td>
+										<td class="px-3 py-2.5 text-right text-white font-bold whitespace-nowrap">{fmtCurrency.format(selectedSale.total)}</td>
+									</tr>
+								</tfoot>
+							</table>
 						</div>
 					</div>
 				{/if}
