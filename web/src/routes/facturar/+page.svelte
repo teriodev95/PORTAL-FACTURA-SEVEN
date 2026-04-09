@@ -45,6 +45,7 @@
         form.legal_name = ticket.customerName;
         form.tax_id = ticket.customerRfc;
         form.email = ticket.customerEmail;
+        form.payment_form = ticket.paymentForm || '01';
       }
     } catch (err) {
       if (err instanceof ApiError) {

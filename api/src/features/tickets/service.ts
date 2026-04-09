@@ -20,6 +20,7 @@ export interface TicketData {
     discount: number;
   }[];
   total: number;
+  paymentForm: string;
 }
 
 export function createTicketService(env: Env) {
@@ -48,6 +49,7 @@ export function createTicketService(env: Env) {
           customerEmail: row.customerEmail ?? '',
           items,
           total: row.total,
+          paymentForm: row.paymentForm,
         };
       }
 
@@ -78,6 +80,7 @@ export function createTicketService(env: Env) {
         customerEmail: email,
         items,
         total,
+        paymentForm: '01',
       };
     },
   };

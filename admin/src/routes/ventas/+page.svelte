@@ -13,6 +13,18 @@
 	const fmtCurrency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 	const fmtDate = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium' });
 
+	const paymentForms: Record<string, string> = {
+		'01': 'Efectivo',
+		'02': 'Cheque',
+		'03': 'Transferencia',
+		'04': 'Tarjeta crédito',
+		'06': 'Dinero electrónico',
+		'08': 'Vales despensa',
+		'28': 'Tarjeta débito',
+		'29': 'Tarjeta servicios',
+		'99': 'Por definir',
+	};
+
 	async function loadSales() {
 		loading = true;
 		error = '';
@@ -26,6 +38,14 @@
 			error = (e as Error).message || 'Error al cargar';
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function updatePayment(idSale: number, paymentForm: string) {
+		try {
+			await admin.updateSalePayment(idSale, paymentForm);
+		} catch (e: unknown) {
+			error = (e as Error).message || 'Error al actualizar';
 		}
 	}
 
@@ -97,6 +117,7 @@
 						<th class="text-left px-4 py-3">Cliente</th>
 						<th class="text-left px-4 py-3">Fecha</th>
 						<th class="text-right px-4 py-3">Total</th>
+						<th class="text-left px-4 py-3">Forma de pago</th>
 						<th class="text-left px-4 py-3">Estado</th>
 					</tr>
 				</thead>
@@ -108,6 +129,17 @@
 							<td class="px-4 py-3 whitespace-nowrap">{fmtDate.format(new Date(sale.saleDate))}</td>
 							<td class="px-4 py-3 text-right">{fmtCurrency.format(sale.total)}</td>
 							<td class="px-4 py-3">
+								<select
+									class="bg-dark-input border border-dark-border rounded-lg px-2 py-1.5 text-white text-xs focus:border-lime/50 focus:outline-none transition-colors"
+									value={sale.paymentForm}
+									onchange={(e) => updatePayment(sale.idSale, (e.target as HTMLSelectElement).value)}
+								>
+									{#each Object.entries(paymentForms) as [code, label]}
+										<option value={code}>{code} - {label}</option>
+									{/each}
+								</select>
+							</td>
+							<td class="px-4 py-3">
 								{#if sale.invoiceUuid}
 									<span class="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-lime/10 text-lime">Facturada</span>
 								{:else}
@@ -117,7 +149,7 @@
 						</tr>
 					{:else}
 						<tr>
-							<td colspan="5" class="text-center text-gray-muted py-12">No se encontraron ventas</td>
+							<td colspan="6" class="text-center text-gray-muted py-12">No se encontraron ventas</td>
 						</tr>
 					{/each}
 				</tbody>

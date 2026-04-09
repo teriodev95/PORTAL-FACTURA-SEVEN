@@ -94,6 +94,26 @@ adminRoutes.get('/sales', async (c) => {
   }
 });
 
+adminRoutes.patch('/sales/:idSale/payment', async (c) => {
+  try {
+    const idSale = Number(c.req.param('idSale'));
+    if (isNaN(idSale)) return c.json({ error: 'ID inválido' }, 400);
+
+    const { paymentForm } = await c.req.json<{ paymentForm: string }>();
+    const valid = ['01', '02', '03', '04', '06', '08', '28', '29', '99'];
+    if (!paymentForm || !valid.includes(paymentForm)) {
+      return c.json({ error: 'Forma de pago inválida' }, 400);
+    }
+
+    const service = createAdminService(c.env.DB);
+    await service.updateSalePaymentForm(idSale, paymentForm);
+    return c.json({ data: { idSale, paymentForm } });
+  } catch (err) {
+    console.error('[Admin Payment Update Error]', err);
+    return c.json({ error: 'Error al actualizar forma de pago' }, 500);
+  }
+});
+
 adminRoutes.get('/sync', async (c) => {
   try {
     const limit = Math.min(100, Math.max(1, Number(c.req.query('limit')) || 20));

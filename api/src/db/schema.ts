@@ -27,6 +27,7 @@ export const sales = sqliteTable('sales', {
   customerEmail: text('customer_email'),
   itemsJson: text('items_json').notNull(),
   total: real('total').notNull(),
+  paymentForm: text('payment_form').notNull().default('01'),
   syncedAt: text('synced_at').notNull(),
 });
 

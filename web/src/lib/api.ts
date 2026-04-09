@@ -50,6 +50,7 @@ export interface TicketData {
     discount: number;
   }[];
   total: number;
+  paymentForm: string;
 }
 
 export interface InvoiceResult {

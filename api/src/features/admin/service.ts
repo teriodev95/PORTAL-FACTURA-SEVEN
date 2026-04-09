@@ -177,6 +177,7 @@ export function createAdminService(db: D1Database) {
           customerEmail: sales.customerEmail,
           itemsJson: sales.itemsJson,
           total: sales.total,
+          paymentForm: sales.paymentForm,
           syncedAt: sales.syncedAt,
           invoiceUuid: invoices.uuid,
           invoiceStatus: invoices.status,
@@ -204,6 +205,10 @@ export function createAdminService(db: D1Database) {
         page,
         pages: Math.ceil(total / limit),
       };
+    },
+
+    async updateSalePaymentForm(idSale: number, paymentForm: string) {
+      await orm.update(sales).set({ paymentForm }).where(eq(sales.idSale, idSale));
     },
 
     async getSyncLogs(limit: number) {

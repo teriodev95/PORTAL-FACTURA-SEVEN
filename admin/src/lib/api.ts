@@ -93,6 +93,7 @@ export interface SaleRow {
 	customerName: string;
 	total: number;
 	saleDate: string;
+	paymentForm: string;
 	invoiceUuid: string | null;
 	invoiceStatus: string | null;
 }
@@ -171,6 +172,8 @@ export const admin = {
 	createUser: (data: { name: string; email: string; password: string; role: string }) =>
 		request<UserInfo>('POST', '/api/admin/users', data),
 	deleteUser: (id: number) => request<void>('DELETE', `/api/admin/users/${id}`),
+	updateSalePayment: (idSale: number, paymentForm: string) =>
+		request<{ idSale: number; paymentForm: string }>('PATCH', `/api/admin/sales/${idSale}/payment`, { paymentForm }),
 	getProducts: () => request<ProductCatalog[]>('GET', '/api/admin/products'),
 	createProduct: (data: { evoPattern: string; satProductKey: string; satDescription: string }) =>
 		request<ProductCatalog>('POST', '/api/admin/products', data),
