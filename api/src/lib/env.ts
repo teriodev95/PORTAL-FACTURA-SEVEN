@@ -8,4 +8,5 @@ export interface Env {
   SW_USER: string;
   SW_PASSWORD: string;
   ALLOWED_ORIGIN: string;
+  ADMIN_KEY: string;
 }

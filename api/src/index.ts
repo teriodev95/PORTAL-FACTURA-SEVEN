@@ -7,6 +7,7 @@ import { desc } from 'drizzle-orm';
 import type { Env } from './lib/env';
 import { tickets } from './features/tickets/routes';
 import { invoicesRoutes } from './features/invoices/routes';
+import { adminRoutes } from './features/admin/routes';
 import { runEvoSync } from './cron/evo-sync';
 import { syncLog } from './db/schema';
 
@@ -17,13 +18,18 @@ app.use('*', (c, next) => {
     origin: (origin) => {
       const allowed = c.env.ALLOWED_ORIGIN || '';
       if (!origin) return allowed;
-      if (origin === allowed || origin.endsWith('.seven-days-facturacion.pages.dev')) {
+      if (
+        origin === allowed ||
+        origin.endsWith('.seven-days-facturacion.pages.dev') ||
+        origin.endsWith('.seven-days-admin.pages.dev') ||
+        origin === 'https://seven-days-admin.pages.dev'
+      ) {
         return origin;
       }
       return allowed;
     },
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type'],
+    allowHeaders: ['Content-Type', 'X-Admin-Key'],
     maxAge: 86400,
   });
   return corsMiddleware(c, next);
@@ -47,6 +53,8 @@ app.get('/api/sync/status', async (c) => {
 
   return c.json({ data: logs });
 });
+
+app.route('/api/admin', adminRoutes);
 
 app.notFound((c) => c.json({ error: 'Ruta no encontrada' }, 404));
 

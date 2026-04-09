@@ -12,6 +12,8 @@ export const invoices = sqliteTable('invoices', {
   status: text('status').notNull().default('valid'),
   cfdiXml: text('cfdi_xml'),
   fechaTimbrado: text('fecha_timbrado'),
+  cancelledAt: text('cancelled_at'),
+  cancelAcuse: text('cancel_acuse'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 
