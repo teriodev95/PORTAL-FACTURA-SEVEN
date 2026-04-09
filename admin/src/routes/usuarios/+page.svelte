@@ -148,7 +148,12 @@
 				<tbody>
 					{#each users as user}
 						<tr class="border-b border-dark-border/50 hover:bg-dark-border/30 transition-colors">
-							<td class="px-4 py-3 font-medium">{user.name}</td>
+							<td class="px-4 py-3 font-medium">
+									{user.name}
+									{#if currentUser && currentUser.id === user.id}
+										<span class="text-xs text-gray-muted ml-1">(tu)</span>
+									{/if}
+								</td>
 							<td class="px-4 py-3 text-gray-muted">{user.email}</td>
 							<td class="px-4 py-3">
 								<span class="inline-block px-2.5 py-1 text-xs font-medium rounded-full {user.role === 'admin' ? 'bg-lime/10 text-lime' : 'bg-dark-border text-gray-muted'}">{user.role}</span>

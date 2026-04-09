@@ -73,9 +73,9 @@
 	<title>Productos SAT - Seven Days Gold Admin</title>
 </svelte:head>
 
-<div class="max-w-4xl mx-auto">
-	<div class="flex items-center justify-between mb-2">
-		<h1 class="text-2xl font-bold text-white">Catalogo de productos SAT</h1>
+<div>
+	<div class="flex items-center justify-between mb-6">
+		<h2 class="text-2xl font-bold">Catalogo de productos SAT</h2>
 		<button
 			class="bg-lime text-dark font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-lime-dark transition-colors active:scale-95"
 			onclick={() => showForm = !showForm}
@@ -83,11 +83,9 @@
 			{showForm ? 'Cancelar' : 'Agregar producto'}
 		</button>
 	</div>
-	<p class="text-gray-muted text-sm mb-6">Mapea las descripciones de EVO a claves SAT para la facturacion automatica</p>
-
 	{#if error}
-		<div class="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-4 text-sm">
-			{error}
+		<div class="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 mb-4">
+			<p class="text-red-400 text-sm">{error}</p>
 		</div>
 	{/if}
 
@@ -139,7 +137,7 @@
 	{/if}
 
 	{#if loading}
-		<div class="flex items-center justify-center py-20">
+		<div class="flex justify-center py-12">
 			<svg class="animate-spin h-8 w-8 text-lime" viewBox="0 0 24 24" fill="none">
 				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -157,21 +155,21 @@
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b border-dark-border">
-							<th class="text-left text-gray-muted font-medium px-5 py-3">Patron EVO</th>
-							<th class="text-left text-gray-muted font-medium px-5 py-3">Clave SAT</th>
-							<th class="text-left text-gray-muted font-medium px-5 py-3">Descripcion</th>
-							<th class="text-right text-gray-muted font-medium px-5 py-3"></th>
+							<th class="text-left px-4 py-3">Patron EVO</th>
+							<th class="text-left px-4 py-3">Clave SAT</th>
+							<th class="text-left px-4 py-3">Descripcion</th>
+							<th class="text-right px-4 py-3"></th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each products as product (product.id)}
 							<tr class="border-b border-dark-border/50 last:border-0 hover:bg-dark-border/10 transition-colors">
-								<td class="px-5 py-3">
+								<td class="px-4 py-3">
 									<span class="inline-block bg-lime/10 text-lime font-mono text-xs px-2 py-1 rounded">{product.evoPattern}</span>
 								</td>
-								<td class="px-5 py-3 text-white font-mono">{product.satProductKey}</td>
-								<td class="px-5 py-3 text-white">{product.satDescription}</td>
-								<td class="px-5 py-3 text-right">
+								<td class="px-4 py-3 text-white font-mono">{product.satProductKey}</td>
+								<td class="px-4 py-3 text-white">{product.satDescription}</td>
+								<td class="px-4 py-3 text-right">
 									{#if confirmDeleteId === product.id}
 										<div class="inline-flex items-center gap-2">
 											<span class="text-gray-muted text-xs">Confirmar?</span>

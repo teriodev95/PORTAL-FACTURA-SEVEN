@@ -79,7 +79,7 @@
 	</div>
 
 	<!-- Info cards -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 		<!-- Last sync -->
 		<div class="bg-dark-card border border-dark-border rounded-xl p-6">
 			<h3 class="text-white font-semibold mb-4">Ultima sincronizacion</h3>
@@ -124,7 +124,7 @@
 		<!-- Available sales -->
 		<div class="bg-dark-card border border-dark-border rounded-xl p-6">
 			<h3 class="text-white font-semibold mb-4">Ventas disponibles</h3>
-			<p class="text-5xl font-bold text-lime">{data.availableSales}</p>
+			<p class="text-3xl font-bold text-lime">{data.availableSales}</p>
 			<p class="text-sm text-gray-muted mt-2">Ventas sin facturar en el sistema</p>
 		</div>
 	</div>
