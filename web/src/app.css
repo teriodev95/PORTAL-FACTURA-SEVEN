@@ -82,3 +82,9 @@ input:focus, select:focus, textarea:focus {
 .animate-slide-up {
   animation: slideUp 0.5s ease-out both;
 }
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}

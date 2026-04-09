@@ -4,6 +4,7 @@ import { adminAuth } from './middleware';
 import { createAdminService } from './service';
 import { authRoutes } from './auth-routes';
 import { userRoutes } from './user-routes';
+import { productRoutes } from './product-routes';
 
 const adminRoutes = new Hono<AdminEnv>();
 
@@ -12,6 +13,9 @@ adminRoutes.route('/auth', authRoutes);
 
 // User management routes — has its own adminAuth + requireAdmin
 adminRoutes.route('/users', userRoutes);
+
+// Product catalog routes — has its own adminAuth
+adminRoutes.route('/products', productRoutes);
 
 // All remaining routes require authentication
 adminRoutes.use('*', adminAuth);

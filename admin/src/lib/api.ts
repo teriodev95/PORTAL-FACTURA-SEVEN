@@ -112,6 +112,13 @@ export interface SyncLogRow {
 	verdict: string;
 }
 
+export interface ProductCatalog {
+	id: number;
+	evoPattern: string;
+	satProductKey: string;
+	satDescription: string;
+}
+
 export interface UserInfo {
 	id: number;
 	name: string;
@@ -163,5 +170,9 @@ export const admin = {
 	getUsers: () => request<UserInfo[]>('GET', '/api/admin/users'),
 	createUser: (data: { name: string; email: string; password: string; role: string }) =>
 		request<UserInfo>('POST', '/api/admin/users', data),
-	deleteUser: (id: number) => request<void>('DELETE', `/api/admin/users/${id}`)
+	deleteUser: (id: number) => request<void>('DELETE', `/api/admin/users/${id}`),
+	getProducts: () => request<ProductCatalog[]>('GET', '/api/admin/products'),
+	createProduct: (data: { evoPattern: string; satProductKey: string; satDescription: string }) =>
+		request<ProductCatalog>('POST', '/api/admin/products', data),
+	deleteProduct: (id: number) => request<void>('DELETE', `/api/admin/products/${id}`)
 };

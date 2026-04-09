@@ -29,5 +29,6 @@ export const createInvoiceSchema = z.object({
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 
 export const SAT_PRODUCT_KEY_GYM = '93151501';
+export const SAT_PRODUCT_KEY_DEFAULT = '93051601'; // Servicios de gimnasios
 export const SAT_UNIT_KEY = 'E48';
 export const SAT_UNIT_NAME = 'Unidad de servicio';

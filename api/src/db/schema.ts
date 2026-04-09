@@ -63,3 +63,26 @@ export const staffUsers = sqliteTable('staff_users', {
 
 export type StaffUser = typeof staffUsers.$inferSelect;
 export type NewStaffUser = typeof staffUsers.$inferInsert;
+
+export const productCatalog = sqliteTable('product_catalog', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  evoPattern: text('evo_pattern').notNull(),
+  satProductKey: text('sat_product_key').notNull(),
+  satDescription: text('sat_description').notNull(),
+});
+
+export const customerFiscal = sqliteTable('customer_fiscal', {
+  rfc: text('rfc').primaryKey(),
+  legalName: text('legal_name').notNull(),
+  zip: text('zip').notNull(),
+  taxSystem: text('tax_system').notNull(),
+  cfdiUse: text('cfdi_use'),
+  paymentForm: text('payment_form'),
+  email: text('email'),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export type ProductCatalogEntry = typeof productCatalog.$inferSelect;
+export type NewProductCatalogEntry = typeof productCatalog.$inferInsert;
+export type CustomerFiscalData = typeof customerFiscal.$inferSelect;
+export type NewCustomerFiscalData = typeof customerFiscal.$inferInsert;

@@ -8,6 +8,7 @@ import type { Env } from './lib/env';
 import { tickets } from './features/tickets/routes';
 import { invoicesRoutes } from './features/invoices/routes';
 import { adminRoutes } from './features/admin/routes';
+import { fiscalRoutes } from './features/fiscal/routes';
 import { runEvoSync } from './cron/evo-sync';
 import { syncLog } from './db/schema';
 
@@ -55,6 +56,8 @@ app.get('/api/sync/status', async (c) => {
 });
 
 app.route('/api/admin', adminRoutes);
+
+app.route('/api/fiscal', fiscalRoutes);
 
 app.notFound((c) => c.json({ error: 'Ruta no encontrada' }, 404));
 

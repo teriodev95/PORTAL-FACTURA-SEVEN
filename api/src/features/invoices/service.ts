@@ -3,8 +3,9 @@ import { drizzle } from 'drizzle-orm/d1';
 import type { Env } from '../../lib/env';
 import { createSwClient, type CfdiJson, type CfdiConcepto, type CfdiTraslado } from '../../lib/sw';
 import { createTicketService } from '../tickets/service';
-import { invoices } from '../../db/schema';
-import { SAT_PRODUCT_KEY_GYM, SAT_UNIT_KEY, SAT_UNIT_NAME, type CreateInvoiceInput } from './schema';
+import { invoices, productCatalog, customerFiscal } from '../../db/schema';
+import type { ProductCatalogEntry } from '../../db/schema';
+import { SAT_PRODUCT_KEY_DEFAULT, SAT_UNIT_KEY, SAT_UNIT_NAME, type CreateInvoiceInput } from './schema';
 
 const EMISOR_RFC = 'SDA1012207SA';
 const EMISOR_NOMBRE = 'SEVEN DAYS ALL SPORT';
@@ -47,9 +48,20 @@ function getMexicoCentralDate(): string {
   return `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}`;
 }
 
+/** Match item description against product catalog entries. Returns first match or default key. */
+function resolveSatProductKey(description: string, catalog: ProductCatalogEntry[]): string {
+  const upper = description.toUpperCase();
+  for (const entry of catalog) {
+    if (upper.includes(entry.evoPattern.toUpperCase())) {
+      return entry.satProductKey;
+    }
+  }
+  return SAT_PRODUCT_KEY_DEFAULT;
+}
+
 function buildCfdiJson(
   input: CreateInvoiceInput,
-  items: { description: string; quantity: number; unitPrice: number; salePrice: number; discount: number }[]
+  items: { description: string; quantity: number; unitPrice: number; salePrice: number; discount: number; satProductKey: string }[]
 ): CfdiJson {
   let subtotal = 0;
   let totalDescuento = 0;
@@ -84,7 +96,7 @@ function buildCfdiJson(
     };
 
     return {
-      ClaveProdServ: SAT_PRODUCT_KEY_GYM,
+      ClaveProdServ: item.satProductKey,
       Cantidad: String(item.quantity),
       ClaveUnidad: SAT_UNIT_KEY,
       Unidad: SAT_UNIT_NAME,
@@ -173,7 +185,14 @@ export function createInvoiceService(env: Env) {
         throw new Error('Ticket no encontrado');
       }
 
-      const cfdiJson = buildCfdiJson(input, ticket.items);
+      // Resolve SAT product key for each item from the product catalog
+      const catalogEntries = await db.select().from(productCatalog).all();
+      const itemsWithKey = ticket.items.map((item) => ({
+        ...item,
+        satProductKey: resolveSatProductKey(item.description, catalogEntries),
+      }));
+
+      const cfdiJson = buildCfdiJson(input, itemsWithKey);
       const swResult = await sw.issueInvoice(cfdiJson);
       const data = swResult.data!;
 
@@ -193,6 +212,33 @@ export function createInvoiceService(env: Env) {
         })
         .returning()
         .get();
+
+      // Save/update customer fiscal data for future autofill (fire-and-forget)
+      try {
+        await db.insert(customerFiscal).values({
+          rfc: input.customer.tax_id,
+          legalName: input.customer.legal_name,
+          zip: input.customer.zip,
+          taxSystem: input.customer.tax_system,
+          cfdiUse: input.use,
+          paymentForm: input.payment_form,
+          email: input.customer.email || null,
+          updatedAt: new Date().toISOString(),
+        }).onConflictDoUpdate({
+          target: customerFiscal.rfc,
+          set: {
+            legalName: input.customer.legal_name,
+            zip: input.customer.zip,
+            taxSystem: input.customer.tax_system,
+            cfdiUse: input.use,
+            paymentForm: input.payment_form,
+            email: input.customer.email || null,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (err) {
+        console.error('[Fiscal upsert error]', err);
+      }
 
       return {
         id: record.id,

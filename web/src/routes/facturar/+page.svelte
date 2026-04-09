@@ -11,6 +11,8 @@
   let submitting = $state(false);
   let fieldErrors = $state<Record<string, string>>({});
 
+  let autofilled = $state(false);
+
   let modal = $state({
     open: false,
     type: 'error' as 'success' | 'error' | 'warning',
@@ -68,6 +70,24 @@
       loadingTicket = false;
     }
   });
+
+  async function onRfcBlur() {
+    const rfc = form.tax_id.trim().toUpperCase();
+    if (rfc.length < 12) return;
+
+    const fiscal = await api.getFiscalData(rfc);
+    if (!fiscal) return;
+
+    if (!form.legal_name) form.legal_name = fiscal.legalName;
+    if (!form.zip) form.zip = fiscal.zip;
+    if (!form.tax_system) form.tax_system = fiscal.taxSystem;
+    if (!form.use && fiscal.cfdiUse) form.use = fiscal.cfdiUse;
+    if (!form.payment_form && fiscal.paymentForm) form.payment_form = fiscal.paymentForm;
+    if (!form.email && fiscal.email) form.email = fiscal.email;
+
+    autofilled = true;
+    setTimeout(() => autofilled = false, 3000);
+  }
 
   function validateForm(): boolean {
     const errors: Record<string, string> = {};
@@ -218,6 +238,10 @@
     <h2 class="text-xl font-bold text-white mb-1">Datos fiscales</h2>
     <p class="text-gray-muted text-sm mb-6">Completa la información tal como aparece en tu constancia de situación fiscal</p>
 
+    {#if autofilled}
+      <p class="text-lime text-xs mb-4 transition-opacity duration-500" style="animation: fadeOut 3s forwards;">Datos precargados</p>
+    {/if}
+
     <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
       <div>
         <label for="legal_name" class="block text-sm font-medium text-gray-muted mb-1.5">Nombre o Razón Social</label>
@@ -241,6 +265,7 @@
             id="tax_id"
             type="text"
             bind:value={form.tax_id}
+            onblur={onRfcBlur}
             placeholder="XAXX010101000"
             maxlength="13"
             autocomplete="off"
