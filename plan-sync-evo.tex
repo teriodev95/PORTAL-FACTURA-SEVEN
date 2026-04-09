@@ -1,0 +1,224 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{multicol}
+\usepackage{microtype}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=2.8cm, right=2.8cm}
+
+\definecolor{devdark}{HTML}{0D0D0D}
+\definecolor{devlime}{HTML}{D4FF00}
+\definecolor{devgray}{HTML}{6B7280}
+\definecolor{devcard}{HTML}{1A1A1A}
+\definecolor{devborder}{HTML}{2A2A2A}
+\definecolor{warnorange}{HTML}{F59E0B}
+\definecolor{warnbg}{HTML}{FEF3C7}
+\definecolor{warntxt}{HTML}{92400E}
+
+\hypersetup{colorlinks=true, linkcolor=devgray, urlcolor=devgray}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\color{devgray}\footnotesize DevForce}
+\fancyfoot[R]{\color{devgray}\footnotesize \thepage\,/\,\pageref{LastPage}}
+
+\usepackage{lastpage}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+
+\begin{document}
+
+% ============================================================
+% COVER PAGE
+% ============================================================
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[devdark] (current page.south west) rectangle (current page.north east);
+  % Thin lime accent line
+  \fill[devlime] ([xshift=2.8cm, yshift=-6cm]current page.north west) rectangle ([xshift=4.2cm, yshift=-6.04cm]current page.north west);
+\end{tikzpicture}
+
+\vspace*{5cm}
+
+\hspace{0.3cm}{\color{devlime}\fontsize{13}{15}\selectfont\textls[80]{\textbf{DEVFORCE}}}
+
+\vspace{2.5cm}
+
+\hspace{0.3cm}{\color{white}\fontsize{26}{30}\selectfont Propuesta de}\\[0.2cm]
+\hspace{0.3cm}{\color{white}\fontsize{26}{30}\selectfont Sincronización EVO}
+
+\vspace{1cm}
+
+\hspace{0.3cm}{\color{devgray}\fontsize{11}{14}\selectfont Seven Days Gold — Portal de Facturación}
+
+\vfill
+
+\hspace{0.3cm}{\color{devgray}\footnotesize 6 de abril de 2026}\\[0.2cm]
+\hspace{0.3cm}{\color{devgray}\footnotesize Confidencial}
+
+\newpage
+
+% ============================================================
+% CONTENT PAGES
+% ============================================================
+\pagecolor{white}
+\color{black}
+
+\section*{Contexto del problema}
+
+El portal de facturación de Seven Days Gold consulta la API de EVO en tiempo real cada vez que un usuario busca su ticket de venta para facturar. Esto presenta limitaciones críticas.
+
+\subsection*{Restricción de créditos}
+
+EVO API Plus asigna \textbf{100 créditos diarios} por unidad (sucursal). Sin embargo, de las 20 sucursales de Seven Days Gold, \textbf{14 comparten los mismos 100 créditos}, lo cual reduce drásticamente la capacidad real:
+
+\begin{center}
+\begin{tabularx}{0.92\textwidth}{lX}
+  \textbf{Créditos totales} & 100 por día, compartidos entre 14 sucursales. \\[0.4em]
+  \textbf{Consumo por factura} & 2 créditos (1 consulta de venta + 1 de miembro). \\[0.4em]
+  \textbf{Capacidad real} & Máximo \textbf{50 facturas por día entre las 14 sucursales}. \\[0.4em]
+  \textbf{Promedio por sucursal} & $\sim$\textbf{3.5 facturas por día} por sucursal. \\[0.4em]
+  \textbf{Riesgo} & Si se agotan los créditos, ninguna de las 14 sucursales puede facturar hasta el día siguiente. \\
+\end{tabularx}
+\end{center}
+
+\textbf{Esto no es viable para operación en producción.} Cualquier pico de demanda en una sola sucursal puede bloquear la facturación de las demás.
+
+\subsection*{Optimización ya aplicada}
+
+Se corrigió la consulta de ventas para usar el filtro directo \texttt{idSale}, reduciendo el consumo de \textbf{$\sim$6 créditos a 2 créditos por factura}. Esto ya está en producción, pero no resuelve el problema de fondo.
+
+\section*{Propuesta de solución}
+
+\subsection*{Sincronización nocturna automática}
+
+Según lo indicado por EVO, existe una ventana de horario libre entre \textbf{0:00 y 5:00 AM hora de Brasil} donde los límites de solicitudes no aplican, permitiendo consultas masivas sin consumir créditos.
+
+La propuesta es implementar un proceso automático (Cloudflare Cron Trigger) que sincronice todas las ventas de EVO hacia una base de datos local (D1) durante esa ventana.
+
+\begin{center}
+\shorthandoff{>}
+\begin{tikzpicture}[
+  box/.style={draw=devborder, fill=devcard, text=white, rounded corners=4pt, minimum width=2.8cm, minimum height=1cm, align=center, font=\footnotesize\bfseries},
+  arrow/.style={->, thick, color=devgray},
+  label/.style={color=devgray, font=\scriptsize, align=center}
+]
+  \node[box] (evo) at (0,0) {EVO API};
+  \node[box] (sync) at (4.5,0) {Sync Worker\\{\tiny\color{devlime}03:00 AM BRT}};
+  \node[box] (d1) at (9,0) {Base de Datos\\{\tiny (Cloudflare D1)}};
+  \node[box] (portal) at (9,-2.5) {Portal\\Facturación};
+  \node[box] (user) at (4.5,-2.5) {Usuario};
+
+  \draw[arrow] (evo) to node[above, label] {Ventas + Miembros} (sync);
+  \draw[arrow] (sync) to node[above, label] {Almacena} (d1);
+  \draw[arrow] (user) to node[above, label] {Busca ticket} (portal);
+  \draw[arrow] (d1) to node[right, label] {Lee de D1\\0 cr\'{e}ditos EVO} (portal);
+\end{tikzpicture}
+\shorthandon{>}
+\end{center}
+
+\subsection*{Flujo propuesto}
+
+\begin{enumerate}[leftmargin=1.5em, itemsep=0.3em]
+  \item \textbf{Cada madrugada} (03:00 AM hora Brasil $\approx$ 12:00 AM hora Morelia), un Worker sincroniza automáticamente las ventas del día desde EVO hacia D1.
+  \item \textbf{Cuando un usuario busca su ticket}, el portal lee de la base local --- \textbf{0 créditos EVO consumidos}.
+  \item \textbf{La facturación} (timbrado con SW sapien) no cambia, sigue funcionando de forma independiente.
+\end{enumerate}
+
+\subsection*{Implicación operativa}
+
+\begin{center}
+\fcolorbox{devborder}{devcard}{
+\begin{minipage}{0.85\textwidth}
+\vspace{0.6em}
+\centering
+{\color{white}\large\bfseries Las facturas se podrán emitir a partir del día siguiente a la compra.}
+
+\vspace{0.4em}
+{\color{devgray}\small Una venta realizada el lunes estará disponible para facturar a partir del martes por la mañana.}
+\vspace{0.6em}
+\end{minipage}
+}
+\end{center}
+
+\vspace{0.3cm}
+
+Esto es una práctica estándar en portales de facturación. Muchos establecimientos manejan un plazo de 24 a 72 horas para emisión de facturas. Lo relevante es que las \textbf{14 sucursales podrán facturar sin ningún límite} durante el día.
+
+\subsection*{Beneficios}
+
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{Sin límites} & Las 14 sucursales pueden facturar sin restricción de créditos. \\[0.4em]
+  \textbf{Más rápido} & Consultas a D1 en $<$10ms vs $\sim$500ms de EVO. \\[0.4em]
+  \textbf{Sin costo adicional} & Sincronizaciones nocturnas no consumen créditos. \\[0.4em]
+  \textbf{Resiliente} & Si EVO no responde durante el día, la facturación sigue operando. \\
+\end{tabularx}
+
+\newpage
+
+\section*{Condición clave}
+
+\begin{center}
+\fcolorbox{warnorange}{warnbg}{
+\begin{minipage}{0.85\textwidth}
+\vspace{0.6em}
+{\color{warntxt}\bfseries\large Esta propuesta está sujeta a la confirmación de que la ventana de 0:00 a 5:00 AM hora Brasil efectivamente permite consultas sin límite de créditos.}
+
+\vspace{0.5em}
+{\color{warntxt}\small De no confirmarse, será necesario evaluar alternativas como la contratación de EVO API Pro (solicitudes ilimitadas) u otro mecanismo de obtención de datos.}
+\vspace{0.6em}
+\end{minipage}
+}
+\end{center}
+
+\section*{Preguntas para validación con EVO}
+
+Antes de proceder con la implementación, necesitamos confirmar lo siguiente:
+
+\begin{enumerate}[leftmargin=1.5em, itemsep=1em]
+  \item \textbf{Zona horaria exacta de la ventana libre}\\
+  ¿El horario de 0:00 a 5:00 AM es hora de Brasília (UTC$-$3)? ¿Aplica por igual para todas las cuentas y sucursales?
+  
+  \item \textbf{Límite real durante la ventana}\\
+  ¿Las solicitudes son completamente ilimitadas, o existe un tope alto (ej.\ 10,000)?
+  
+  \item \textbf{Confirmación con prueba}\\
+  ¿Podemos ejecutar una corrida de prueba de sincronización masiva durante la madrugada para verificar que no se descuenten créditos?
+  
+  \item \textbf{Volumen de ventas}\\
+  ¿Cuántas ventas diarias maneja aproximadamente Seven Days Gold entre las 14 sucursales? Esto permite dimensionar el proceso de sincronización.
+  
+  \item \textbf{Filtro por fecha en la API}\\
+  ¿El endpoint de ventas soporta filtros por rango de fecha (\texttt{dateStart}, \texttt{dateEnd})? Esto optimizaría el sync para traer solo ventas nuevas.
+\end{enumerate}
+
+\section*{Cronograma}
+
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{Fase 1} & Validar respuestas y confirmar ventana horaria con EVO. \\[0.4em]
+  \textbf{Fase 2} & Implementar tabla de ventas en D1 + Worker de sincronización. \\[0.4em]
+  \textbf{Fase 3} & Modificar portal para leer de D1 en lugar de EVO en tiempo real. \\[0.4em]
+  \textbf{Fase 4} & Prueba en producción con sync nocturno + monitoreo de créditos. \\
+\end{tabularx}
+
+\vfill
+
+\begin{center}
+  {\color{devgray}\rule{0.3\textwidth}{0.3pt}}\\[0.6cm]
+  {\color{devgray}\small DevForce — Jesús E.}\\
+  {\color{devgray}\small 6 de abril de 2026}
+\end{center}
+
+\end{document}

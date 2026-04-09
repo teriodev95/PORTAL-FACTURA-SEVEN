@@ -1,0 +1,21 @@
+name = "seven-days-api"
+main = "src/index.ts"
+compatibility_date = "2025-03-15"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+EVO_API_URL = "https://evo-integracao.w12app.com.br"
+SW_API_URL = "https://services.test.sw.com.mx"
+SW_DATA_URL = "https://api.test.sw.com.mx"
+ALLOWED_ORIGIN = "https://seven-days-facturacion.pages.dev"
+
+# EVO API Probe: 06:00 UTC = 03:00 BRT (inside free window)
+#                 10:00 UTC = 07:00 BRT (outside free window, for comparison)
+[triggers]
+crons = ["0 6 * * *", "0 10 * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "seven-days-db"
+database_id = "4ca00991-039f-4a16-96a8-b68b45f173d9"
+migrations_dir = "drizzle"

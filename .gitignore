@@ -1,0 +1,26 @@
+node_modules/
+.wrangler/
+.svelte-kit/
+dist/
+build/
+.env
+.env.*
+*.log
+.DS_Store
+.vite/
+
+# Archivos sensibles
+*.cer
+*.key
+*.pfx
+*.zip
+Chat de WhatsApp*/
+output/
+
+# LaTeX auxiliares
+*.aux
+*.out
+*.synctex.gz
+
+# Imágenes sueltas
+*.png

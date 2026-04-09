@@ -1,0 +1,233 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usepackage{fontawesome5}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+% DevForce Colors
+\definecolor{dfblack}{HTML}{0D0D0D}
+\definecolor{dflime}{HTML}{D4FF00}
+\definecolor{dfgray}{HTML}{6B7280}
+\definecolor{dfdark}{HTML}{1A1A1A}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=dfblack,
+  urlcolor=dfgray,
+  pdfauthor={DevForce},
+  pdftitle={Reporte de Entrega - Portal de Facturación Seven Days Gold}
+}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\textcolor{dfgray}{DevForce}}
+\fancyhead[R]{\small\textcolor{dfgray}{Confidencial}}
+\fancyfoot[C]{\small\textcolor{dfgray}{\thepage}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{8pt}
+
+\begin{document}
+
+% ============================================================
+% PORTADA
+% ============================================================
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[dfblack] (current page.south west) rectangle (current page.north east);
+  \node[anchor=north west, text=white, font=\sffamily] at ([shift={(2.5cm,-3cm)}]current page.north west) {
+    \begin{minipage}{0.7\textwidth}
+      {\fontsize{14}{16}\selectfont\textcolor{dflime}{\textbf{DEVFORCE}}}\\[30pt]
+      {\fontsize{28}{32}\selectfont\textbf{Reporte de Entrega}}\\[8pt]
+      {\fontsize{28}{32}\selectfont\textcolor{dflime}{\textbf{Portal de Facturación}}}\\[20pt]
+      {\fontsize{14}{18}\selectfont\textcolor{dfgray}{Seven Days Gold --- Ecosistema Digital}}\\[60pt]
+      {\small\textcolor{dfgray}{
+        \begin{tabular}{@{}ll}
+          Fecha: & 21 de marzo de 2026\\[4pt]
+          Cliente: & Seven Days All Sport S.A. de C.V.\\[4pt]
+          RFC: & SDA1012207SA\\[4pt]
+          Proyecto: & Portal de Facturación Electrónica CFDI 4.0\\[4pt]
+          Versión: & 1.0.0\\
+        \end{tabular}
+      }}
+    \end{minipage}
+  };
+\end{tikzpicture}
+
+\newpage
+
+% ============================================================
+% RESUMEN EJECUTIVO
+% ============================================================
+\section*{Resumen Ejecutivo}
+
+Se entrega el \textbf{Portal de Facturación Electrónica} para Seven Days Gold, un sistema que permite a los socios del gimnasio generar sus facturas CFDI 4.0 de manera autónoma desde cualquier dispositivo.
+
+El sistema conecta directamente con \textbf{EVO} (sistema de gestión del gimnasio) para obtener los datos de las ventas y con \textbf{Facturapi} como Proveedor Autorizado de Certificación (PAC) para el timbrado ante el SAT.
+
+\subsection*{URLs de Acceso}
+
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{Portal (Frontend):} & \url{https://seven-days-facturacion.pages.dev} \\[4pt]
+  \textbf{API (Backend):} & \url{https://seven-days-api.clvrt.workers.dev} \\
+\end{tabularx}
+
+% ============================================================
+% ARQUITECTURA
+% ============================================================
+\section*{Arquitectura del Sistema}
+
+El sistema está construido sobre infraestructura \textbf{Cloudflare}, lo que garantiza disponibilidad global, baja latencia y seguridad.
+
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{Frontend} & SvelteKit + Cloudflare Pages \\
+  \textbf{Backend API} & Cloudflare Workers + Hono.js \\
+  \textbf{Base de Datos} & Cloudflare D1 (SQLite edge) \\
+  \textbf{Facturación} & Facturapi.io (PAC) \\
+  \textbf{Datos de Ventas} & EVO API (Basic Auth) \\
+  \textbf{Validación} & Zod (server-side) \\
+\end{tabularx}
+
+\subsection*{Flujo del Sistema}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item El usuario ingresa su número de ticket en el portal.
+  \item El sistema consulta la venta en EVO y muestra los conceptos.
+  \item El usuario completa sus datos fiscales (RFC, régimen, C.P., uso CFDI, forma de pago).
+  \item El sistema genera el CFDI 4.0 mediante Facturapi y lo timbra ante el SAT.
+  \item El usuario descarga su factura en PDF y XML.
+\end{enumerate}
+
+% ============================================================
+% SEGURIDAD
+% ============================================================
+\section*{Seguridad Implementada}
+
+\begin{itemize}[leftmargin=1.5cm]
+  \item \textbf{API Keys protegidas} --- Almacenadas como Cloudflare Secrets, nunca expuestas en código.
+  \item \textbf{Validación server-side} --- Todos los inputs validados con Zod (RFC, C.P., campos requeridos).
+  \item \textbf{Sanitización XSS} --- Tags HTML removidos de todos los campos de texto.
+  \item \textbf{Protección SQL Injection} --- Drizzle ORM con queries parametrizadas.
+  \item \textbf{CORS restringido} --- Solo acepta peticiones del dominio del portal.
+  \item \textbf{Secure Headers} --- X-Content-Type-Options, X-Frame-Options, CSP.
+  \item \textbf{Factura duplicada} --- Prevención de doble facturación por ticket.
+\end{itemize}
+
+% ============================================================
+% CÓMO PROBAR
+% ============================================================
+\section*{Instrucciones de Prueba}
+
+\subsection*{Paso 1: Buscar un ticket}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Abrir \url{https://seven-days-facturacion.pages.dev}
+  \item Ingresar un número de ticket. Tickets disponibles para prueba:
+\end{enumerate}
+
+\begin{center}
+\begin{tabularx}{0.85\textwidth}{clXr}
+  \textbf{Ticket} & \textbf{Cliente} & \textbf{Plan} & \textbf{Total} \\
+  \hline
+  27 & Veronica González & TODO EXPRESS & \$799 \\
+  26 & Patricia Bustos & TODO EXPRESS & \$799 \\
+  25 & Roman Martínez & TODO EXPRESS & \$799 \\
+  24 & Ernesto Alcántara & MULTICLUB TODO EXPRESS & \$899 \\
+  23 & Cliente Prueba & MULTICLUB + INSCRIPCIÓN & \$1,189 \\
+\end{tabularx}
+\end{center}
+
+\subsection*{Paso 2: Llenar datos fiscales}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Click en \textbf{``Facturar''}.
+  \item Llenar los datos fiscales. Para prueba rápida usar:
+\end{enumerate}
+
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{lX}
+  \textbf{Nombre:} & PUBLICO GENERAL \\
+  \textbf{RFC:} & XAXX010101000 \\
+  \textbf{Régimen:} & 616 - Sin obligaciones fiscales \\
+  \textbf{C.P.:} & 58260 \\
+  \textbf{Uso CFDI:} & S01 - Sin efectos fiscales \\
+  \textbf{Forma de pago:} & 01 - Efectivo \\
+\end{tabularx}
+\end{center}
+
+\subsection*{Paso 3: Generar y descargar}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Click en \textbf{``Generar Factura''}.
+  \item Se mostrará la confirmación con UUID y folio.
+  \item Descargar \textbf{PDF} y \textbf{XML}.
+\end{enumerate}
+
+\textbf{Nota:} El sistema está en modo de prueba (sandbox). Las facturas generadas son válidas en formato pero no tienen efecto fiscal real.
+
+% ============================================================
+% DATOS DEL EMISOR
+% ============================================================
+\section*{Datos Fiscales Configurados (Emisor)}
+
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{RFC:} & SDA1012207SA \\
+  \textbf{Razón Social:} & SEVEN DAYS ALL SPORT \\
+  \textbf{Régimen Fiscal:} & 601 - General de Ley Personas Morales \\
+  \textbf{Código Postal:} & 58260 \\
+  \textbf{CSD:} & Configurado en Facturapi \\
+\end{tabularx}
+
+% ============================================================
+% INTEGRACIONES
+% ============================================================
+\section*{Integraciones Activas}
+
+\subsection*{EVO API}
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{Base URL:} & \texttt{evo-integracao.w12app.com.br} \\
+  \textbf{Auth:} & Basic (DNS + Secret Key) \\
+  \textbf{Endpoints activos:} & Members, Sales, Prospects \\
+  \textbf{Endpoints sin permiso:} & Activities, Access Control, Employees \\
+\end{tabularx}
+
+\subsection*{Facturapi}
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{Modo:} & Test (sandbox) \\
+  \textbf{Endpoints:} & Create Invoice, Download PDF/XML, Cancel \\
+\end{tabularx}
+
+% ============================================================
+% PENDIENTES
+% ============================================================
+\section*{Pendientes para Producción}
+
+\begin{enumerate}[leftmargin=1.5cm]
+  \item Cambiar API key de Facturapi de \texttt{sk\_test\_*} a \texttt{sk\_live\_*}.
+  \item Solicitar permisos de \textbf{Access Control} y \textbf{Activities} en el token de EVO.
+  \item Solicitar APIs de \textbf{Wellhub} y \textbf{TotalPass} para integración.
+  \item Configurar dominio personalizado (ej. \texttt{facturacion.sevendaysgold.com}).
+  \item Cuenta Apple Developer (\$99 USD) para app móvil futura.
+\end{enumerate}
+
+\vfill
+
+\begin{center}
+\textcolor{dfgray}{\rule{0.3\textwidth}{0.4pt}}\\[10pt]
+\textcolor{dfgray}{\small Documento generado por DevForce --- \url{https://dev-force.com}}\\
+\textcolor{dfgray}{\small Morelia, Michoacán --- Marzo 2026}
+\end{center}
+
+\end{document}
