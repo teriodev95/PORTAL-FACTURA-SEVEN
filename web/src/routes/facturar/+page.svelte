@@ -12,6 +12,7 @@
   let fieldErrors = $state<Record<string, string>>({});
 
   let autofilled = $state(false);
+  let staffLocked = $state<Set<string>>(new Set());
 
   let modal = $state({
     open: false,
@@ -58,8 +59,15 @@
             form.use = fiscal.cfdiUse || 'G03';
             form.payment_form = fiscal.paymentForm || form.payment_form;
             form.email = fiscal.email || form.email;
-            autofilled = true;
-            setTimeout(() => autofilled = false, 3000);
+            const locked = new Set<string>();
+            locked.add('tax_id');
+            if (fiscal.legalName) locked.add('legal_name');
+            if (fiscal.zip) locked.add('zip');
+            if (fiscal.taxSystem) locked.add('tax_system');
+            if (fiscal.cfdiUse) locked.add('use');
+            if (fiscal.paymentForm) locked.add('payment_form');
+            if (fiscal.email) locked.add('email');
+            staffLocked = locked;
           }
         }
       }
@@ -89,6 +97,7 @@
   });
 
   async function onRfcBlur() {
+    if (staffLocked.has('tax_id')) return;
     const rfc = form.tax_id.trim().toUpperCase();
     if (rfc.length < 12) return;
 
@@ -256,7 +265,9 @@
     <h2 class="text-xl font-bold text-white mb-1">Datos fiscales</h2>
     <p class="text-gray-muted text-sm mb-6">Completa la información tal como aparece en tu constancia de situación fiscal</p>
 
-    {#if autofilled}
+    {#if staffLocked.size > 0}
+      <p class="text-lime/70 text-xs mb-4">Datos fiscales configurados por el gimnasio</p>
+    {:else if autofilled}
       <p class="text-lime text-xs mb-4 transition-opacity duration-500" style="animation: fadeOut 3s forwards;">Datos precargados</p>
     {/if}
 
@@ -267,9 +278,10 @@
           id="legal_name"
           type="text"
           bind:value={form.legal_name}
+          disabled={staffLocked.has('legal_name')}
           placeholder="Como aparece en tu constancia fiscal"
           autocomplete="organization"
-          class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white placeholder:text-gray-muted/40 transition-colors {fieldErrors['legal_name'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+          class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white placeholder:text-gray-muted/40 transition-colors {fieldErrors['legal_name'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('legal_name') ? 'opacity-70 cursor-not-allowed' : ''}"
         />
         {#if fieldErrors['legal_name']}
           <p class="text-red-400 text-xs mt-1">{fieldErrors['legal_name']}</p>
@@ -283,11 +295,12 @@
             id="tax_id"
             type="text"
             bind:value={form.tax_id}
+            disabled={staffLocked.has('tax_id')}
             onblur={onRfcBlur}
             placeholder="XAXX010101000"
             maxlength="13"
             autocomplete="off"
-            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white uppercase placeholder:text-gray-muted/40 transition-colors {fieldErrors['tax_id'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white uppercase placeholder:text-gray-muted/40 transition-colors {fieldErrors['tax_id'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('tax_id') ? 'opacity-70 cursor-not-allowed' : ''}"
           />
           {#if fieldErrors['tax_id']}
             <p class="text-red-400 text-xs mt-1">{fieldErrors['tax_id']}</p>
@@ -301,10 +314,11 @@
             type="text"
             inputmode="numeric"
             bind:value={form.zip}
+            disabled={staffLocked.has('zip')}
             placeholder="58260"
             maxlength="5"
             autocomplete="postal-code"
-            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white placeholder:text-gray-muted/40 transition-colors {fieldErrors['zip'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white placeholder:text-gray-muted/40 transition-colors {fieldErrors['zip'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('zip') ? 'opacity-70 cursor-not-allowed' : ''}"
           />
           {#if fieldErrors['zip']}
             <p class="text-red-400 text-xs mt-1">{fieldErrors['zip']}</p>
@@ -317,7 +331,8 @@
         <select
           id="tax_system"
           bind:value={form.tax_system}
-          class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white transition-colors appearance-none {fieldErrors['tax_system'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+          disabled={staffLocked.has('tax_system')}
+          class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white transition-colors appearance-none {fieldErrors['tax_system'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('tax_system') ? 'opacity-70 cursor-not-allowed' : ''}"
         >
           <option value="" disabled>Selecciona tu régimen fiscal</option>
           {#each TAX_SYSTEMS as sys}
@@ -335,7 +350,8 @@
           <select
             id="use"
             bind:value={form.use}
-            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white transition-colors appearance-none {fieldErrors['use'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+            disabled={staffLocked.has('use')}
+            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white transition-colors appearance-none {fieldErrors['use'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('use') ? 'opacity-70 cursor-not-allowed' : ''}"
           >
             <option value="" disabled>Selecciona</option>
             {#each CFDI_USES as u}
@@ -352,7 +368,8 @@
           <select
             id="payment_form"
             bind:value={form.payment_form}
-            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white transition-colors appearance-none {fieldErrors['payment_form'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+            disabled={staffLocked.has('payment_form')}
+            class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white transition-colors appearance-none {fieldErrors['payment_form'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('payment_form') ? 'opacity-70 cursor-not-allowed' : ''}"
           >
             <option value="" disabled>Selecciona cómo pagaste</option>
             {#each PAYMENT_FORMS as pf}
@@ -371,9 +388,10 @@
           id="email"
           type="email"
           bind:value={form.email}
+          disabled={staffLocked.has('email')}
           placeholder="correo@ejemplo.com"
           autocomplete="email"
-          class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white placeholder:text-gray-muted/40 transition-colors {fieldErrors['email'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'}"
+          class="w-full bg-dark-input border rounded-xl px-4 py-3 text-white placeholder:text-gray-muted/40 transition-colors {fieldErrors['email'] ? 'border-red-500' : 'border-dark-border hover:border-gray-muted/40'} {staffLocked.has('email') ? 'opacity-70 cursor-not-allowed' : ''}"
         />
         {#if fieldErrors['email']}
           <p class="text-red-400 text-xs mt-1">{fieldErrors['email']}</p>

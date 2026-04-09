@@ -27,6 +27,11 @@
 	let fiscalMsg = $state('');
 	let fiscalError = $state('');
 
+	// Emit invoice
+	let emitting = $state(false);
+	let emitResult = $state<{ uuid: string; total: number } | null>(null);
+	let emitError = $state('');
+
 	// Toast
 	let toast = $state('');
 
@@ -132,6 +137,8 @@
 		detailOpen = true;
 		fiscalMsg = '';
 		fiscalError = '';
+		emitResult = null;
+		emitError = '';
 
 		// Reset fiscal form
 		fiscalRfc = sale.customerRfc || '';
@@ -201,6 +208,45 @@
 			fiscalError = (e as Error).message || 'Error al guardar';
 		} finally {
 			fiscalSaving = false;
+		}
+	}
+
+	async function emitInvoice() {
+		if (!selectedSale || !fiscalRfc || !fiscalLegalName || !fiscalZip || !fiscalTaxSystem) {
+			emitError = 'Completa los datos fiscales antes de emitir';
+			return;
+		}
+		emitting = true;
+		emitError = '';
+		emitResult = null;
+		try {
+			const API_BASE = import.meta.env.VITE_API_URL || 'https://seven-days-api.clvrt.workers.dev';
+			const res = await fetch(`${API_BASE}/api/invoices`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					idSale: selectedSale.idSale,
+					customer: {
+						legal_name: fiscalLegalName.toUpperCase(),
+						tax_id: fiscalRfc.toUpperCase(),
+						tax_system: fiscalTaxSystem,
+						zip: fiscalZip,
+						email: fiscalEmail || undefined,
+					},
+					use: fiscalCfdiUse || 'G03',
+					payment_form: fiscalPaymentForm || '01',
+				}),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Error al emitir factura');
+			emitResult = data.data;
+			toast = `Factura emitida: ${data.data.uuid}`;
+			setTimeout(() => (toast = ''), 6000);
+			loadSales();
+		} catch (e: unknown) {
+			emitError = (e as Error).message || 'Error al emitir factura';
+		} finally {
+			emitting = false;
 		}
 	}
 
@@ -579,6 +625,45 @@
 								{/if}
 								Guardar datos fiscales
 							</button>
+
+							<!-- Divider -->
+							<div class="border-t border-dark-border my-4"></div>
+
+							<!-- Emit invoice section -->
+							{#if !selectedSale.invoiceUuid}
+								{#if emitResult}
+									<div class="bg-lime/10 border border-lime/20 rounded-lg px-4 py-3">
+										<p class="text-lime text-sm font-medium">Factura emitida</p>
+										<p class="text-white text-xs font-mono mt-1 break-all">{emitResult.uuid}</p>
+									</div>
+								{:else}
+									{#if emitError}
+										<p class="text-red-400 text-xs mb-2">{emitError}</p>
+									{/if}
+									<button
+										class="w-full bg-lime hover:bg-lime-dark text-dark font-bold rounded-lg px-4 py-3 text-sm transition-colors disabled:opacity-50"
+										disabled={emitting || !fiscalRfc || !fiscalLegalName || !fiscalZip || !fiscalTaxSystem}
+										onclick={emitInvoice}
+									>
+										{#if emitting}
+											<span class="inline-flex items-center gap-2">
+												<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+												</svg>
+												Emitiendo factura...
+											</span>
+										{:else}
+											Emitir factura
+										{/if}
+									</button>
+								{/if}
+							{:else}
+								<div class="bg-lime/10 border border-lime/20 rounded-lg px-4 py-3">
+									<p class="text-lime text-sm font-medium">Factura ya emitida</p>
+									<p class="text-white text-xs font-mono mt-1 break-all">{selectedSale.invoiceUuid}</p>
+								</div>
+							{/if}
 						</div>
 					{/if}
 				</div>
