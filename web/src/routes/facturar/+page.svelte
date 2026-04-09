@@ -42,10 +42,26 @@
     try {
       ticket = await api.getTicket(idSale);
       if (ticket) {
+        // Step 1: Prefill from ticket (EVO data)
         form.legal_name = ticket.customerName;
         form.tax_id = ticket.customerRfc;
         form.email = ticket.customerEmail;
         form.payment_form = ticket.paymentForm || '01';
+
+        // Step 2: If client has RFC, try to load saved fiscal data (overrides ticket data)
+        if (ticket.customerRfc && ticket.customerRfc.length >= 12) {
+          const fiscal = await api.getFiscalData(ticket.customerRfc.toUpperCase());
+          if (fiscal) {
+            form.legal_name = fiscal.legalName || form.legal_name;
+            form.zip = fiscal.zip || '';
+            form.tax_system = fiscal.taxSystem || '';
+            form.use = fiscal.cfdiUse || 'G03';
+            form.payment_form = fiscal.paymentForm || form.payment_form;
+            form.email = fiscal.email || form.email;
+            autofilled = true;
+            setTimeout(() => autofilled = false, 3000);
+          }
+        }
       }
     } catch (err) {
       if (err instanceof ApiError) {
@@ -79,12 +95,13 @@
     const fiscal = await api.getFiscalData(rfc);
     if (!fiscal) return;
 
-    if (!form.legal_name) form.legal_name = fiscal.legalName;
-    if (!form.zip) form.zip = fiscal.zip;
-    if (!form.tax_system) form.tax_system = fiscal.taxSystem;
-    if (!form.use && fiscal.cfdiUse) form.use = fiscal.cfdiUse;
-    if (!form.payment_form && fiscal.paymentForm) form.payment_form = fiscal.paymentForm;
-    if (!form.email && fiscal.email) form.email = fiscal.email;
+    // Overwrite all fields with saved fiscal data
+    form.legal_name = fiscal.legalName;
+    form.zip = fiscal.zip;
+    form.tax_system = fiscal.taxSystem;
+    if (fiscal.cfdiUse) form.use = fiscal.cfdiUse;
+    if (fiscal.paymentForm) form.payment_form = fiscal.paymentForm;
+    if (fiscal.email) form.email = fiscal.email;
 
     autofilled = true;
     setTimeout(() => autofilled = false, 3000);
