@@ -212,6 +212,7 @@
 	}
 
 	async function emitInvoice() {
+		if (emitting) return;
 		if (!selectedSale || !fiscalRfc || !fiscalLegalName || !fiscalZip || !fiscalTaxSystem) {
 			emitError = 'Completa los datos fiscales antes de emitir';
 			return;
@@ -220,6 +221,18 @@
 		emitError = '';
 		emitResult = null;
 		try {
+			// Auto-save fiscal data before emitting
+			await admin.upsertFiscal({
+				rfc: fiscalRfc,
+				legalName: fiscalLegalName,
+				zip: fiscalZip,
+				taxSystem: fiscalTaxSystem,
+				cfdiUse: fiscalCfdiUse || undefined,
+				paymentForm: fiscalPaymentForm || undefined,
+				email: fiscalEmail || undefined,
+				idSale: selectedSale.idSale,
+			});
+
 			const API_BASE = import.meta.env.VITE_API_URL || 'https://seven-days-api.clvrt.workers.dev';
 			const res = await fetch(`${API_BASE}/api/invoices`, {
 				method: 'POST',
@@ -240,6 +253,7 @@
 			const data = await res.json();
 			if (!res.ok) throw new Error(data.error || 'Error al emitir factura');
 			emitResult = data.data;
+			if (selectedSale) selectedSale.invoiceUuid = data.data.uuid;
 			toast = `Factura emitida: ${data.data.uuid}`;
 			setTimeout(() => (toast = ''), 6000);
 			loadSales();
