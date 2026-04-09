@@ -114,6 +114,44 @@ adminRoutes.patch('/sales/:idSale/payment', async (c) => {
   }
 });
 
+adminRoutes.get('/fiscal/:rfc', async (c) => {
+  try {
+    const rfc = c.req.param('rfc');
+    const service = createAdminService(c.env.DB);
+    const data = await service.getFiscalByRfc(rfc);
+    if (!data) return c.json({ data: null });
+    return c.json({ data });
+  } catch (err) {
+    console.error('[Admin Fiscal Get Error]', err);
+    return c.json({ error: 'Error al obtener datos fiscales' }, 500);
+  }
+});
+
+adminRoutes.put('/fiscal', async (c) => {
+  try {
+    const body = await c.req.json<{
+      rfc: string;
+      legalName: string;
+      zip: string;
+      taxSystem: string;
+      cfdiUse?: string;
+      paymentForm?: string;
+      email?: string;
+    }>();
+
+    if (!body.rfc || !body.legalName || !body.zip || !body.taxSystem) {
+      return c.json({ error: 'RFC, nombre, código postal y régimen fiscal son requeridos' }, 400);
+    }
+
+    const service = createAdminService(c.env.DB);
+    const data = await service.upsertFiscalData(body);
+    return c.json({ data });
+  } catch (err) {
+    console.error('[Admin Fiscal Upsert Error]', err);
+    return c.json({ error: 'Error al guardar datos fiscales' }, 500);
+  }
+});
+
 adminRoutes.get('/sync', async (c) => {
   try {
     const limit = Math.min(100, Math.max(1, Number(c.req.query('limit')) || 20));

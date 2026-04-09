@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, like, and, or, gte, lte, isNull, isNotNull, desc, sql, count } from 'drizzle-orm';
-import { invoices, sales, syncLog } from '../../db/schema';
+import { invoices, sales, syncLog, customerFiscal } from '../../db/schema';
 import { createSwClient } from '../../lib/sw';
 import type { Env } from '../../lib/env';
 
@@ -217,6 +217,40 @@ export function createAdminService(db: D1Database) {
         .from(syncLog)
         .orderBy(desc(syncLog.runAt))
         .limit(limit);
+    },
+
+    async upsertFiscalData(data: {
+      rfc: string; legalName: string; zip: string; taxSystem: string;
+      cfdiUse?: string; paymentForm?: string; email?: string;
+    }) {
+      const now = new Date().toISOString();
+      const [result] = await orm.insert(customerFiscal).values({
+        rfc: data.rfc.toUpperCase(),
+        legalName: data.legalName.toUpperCase(),
+        zip: data.zip,
+        taxSystem: data.taxSystem,
+        cfdiUse: data.cfdiUse || null,
+        paymentForm: data.paymentForm || null,
+        email: data.email || null,
+        updatedAt: now,
+      }).onConflictDoUpdate({
+        target: customerFiscal.rfc,
+        set: {
+          legalName: data.legalName.toUpperCase(),
+          zip: data.zip,
+          taxSystem: data.taxSystem,
+          cfdiUse: data.cfdiUse || null,
+          paymentForm: data.paymentForm || null,
+          email: data.email || null,
+          updatedAt: now,
+        },
+      }).returning();
+      return result;
+    },
+
+    async getFiscalByRfc(rfc: string) {
+      const [row] = await orm.select().from(customerFiscal).where(eq(customerFiscal.rfc, rfc.toUpperCase())).limit(1);
+      return row || null;
     },
   };
 }

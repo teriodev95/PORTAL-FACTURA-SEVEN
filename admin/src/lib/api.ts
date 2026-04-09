@@ -91,11 +91,25 @@ export interface PaginatedResult<T> {
 export interface SaleRow {
 	idSale: number;
 	customerName: string;
+	customerRfc: string | null;
+	customerEmail: string | null;
+	itemsJson: string;
 	total: number;
 	saleDate: string;
 	paymentForm: string;
 	invoiceUuid: string | null;
 	invoiceStatus: string | null;
+}
+
+export interface CustomerFiscal {
+	rfc: string;
+	legalName: string;
+	zip: string;
+	taxSystem: string;
+	cfdiUse: string | null;
+	paymentForm: string | null;
+	email: string | null;
+	updatedAt: string;
 }
 
 export interface SyncLogRow {
@@ -177,5 +191,8 @@ export const admin = {
 	getProducts: () => request<ProductCatalog[]>('GET', '/api/admin/products'),
 	createProduct: (data: { evoPattern: string; satProductKey: string; satDescription: string }) =>
 		request<ProductCatalog>('POST', '/api/admin/products', data),
-	deleteProduct: (id: number) => request<void>('DELETE', `/api/admin/products/${id}`)
+	deleteProduct: (id: number) => request<void>('DELETE', `/api/admin/products/${id}`),
+	getFiscalByRfc: (rfc: string) => request<CustomerFiscal | null>('GET', `/api/admin/fiscal/${rfc}`),
+	upsertFiscal: (data: { rfc: string; legalName: string; zip: string; taxSystem: string; cfdiUse?: string; paymentForm?: string; email?: string }) =>
+		request<CustomerFiscal>('PUT', '/api/admin/fiscal', data),
 };
