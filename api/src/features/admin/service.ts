@@ -211,6 +211,10 @@ export function createAdminService(db: D1Database) {
       await orm.update(sales).set({ paymentForm }).where(eq(sales.idSale, idSale));
     },
 
+    async updateSaleRfc(idSale: number, rfc: string) {
+      await orm.update(sales).set({ customerRfc: rfc.toUpperCase() }).where(eq(sales.idSale, idSale));
+    },
+
     async getSyncLogs(limit: number) {
       return orm
         .select()

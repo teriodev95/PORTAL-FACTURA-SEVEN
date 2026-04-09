@@ -137,6 +137,7 @@ adminRoutes.put('/fiscal', async (c) => {
       cfdiUse?: string;
       paymentForm?: string;
       email?: string;
+      idSale?: number;
     }>();
 
     if (!body.rfc || !body.legalName || !body.zip || !body.taxSystem) {
@@ -145,6 +146,12 @@ adminRoutes.put('/fiscal', async (c) => {
 
     const service = createAdminService(c.env.DB);
     const data = await service.upsertFiscalData(body);
+
+    // Also update the sale's RFC so it links properly on next open
+    if (body.idSale) {
+      await service.updateSaleRfc(body.idSale, body.rfc);
+    }
+
     return c.json({ data });
   } catch (err) {
     console.error('[Admin Fiscal Upsert Error]', err);

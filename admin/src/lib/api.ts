@@ -193,6 +193,6 @@ export const admin = {
 		request<ProductCatalog>('POST', '/api/admin/products', data),
 	deleteProduct: (id: number) => request<void>('DELETE', `/api/admin/products/${id}`),
 	getFiscalByRfc: (rfc: string) => request<CustomerFiscal | null>('GET', `/api/admin/fiscal/${rfc}`),
-	upsertFiscal: (data: { rfc: string; legalName: string; zip: string; taxSystem: string; cfdiUse?: string; paymentForm?: string; email?: string }) =>
+	upsertFiscal: (data: { rfc: string; legalName: string; zip: string; taxSystem: string; cfdiUse?: string; paymentForm?: string; email?: string; idSale?: number }) =>
 		request<CustomerFiscal>('PUT', '/api/admin/fiscal', data),
 };

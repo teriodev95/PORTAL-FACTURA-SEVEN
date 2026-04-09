@@ -188,7 +188,12 @@
 				cfdiUse: fiscalCfdiUse || undefined,
 				paymentForm: fiscalPaymentForm || undefined,
 				email: fiscalEmail || undefined,
+				idSale: selectedSale?.idSale,
 			});
+			// Update local sale data so re-opening shows the RFC
+			if (selectedSale) {
+				selectedSale.customerRfc = fiscalRfc.toUpperCase();
+			}
 			fiscalMsg = 'Datos fiscales guardados correctamente';
 			toast = 'Datos fiscales guardados';
 			setTimeout(() => (toast = ''), 4000);
