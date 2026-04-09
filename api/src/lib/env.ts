@@ -9,4 +9,5 @@ export interface Env {
   SW_PASSWORD: string;
   ALLOWED_ORIGIN: string;
   ADMIN_KEY: string;
+  JWT_SECRET: string;
 }

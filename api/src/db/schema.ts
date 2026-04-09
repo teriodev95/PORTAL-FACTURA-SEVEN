@@ -50,3 +50,16 @@ export type NewInvoice = typeof invoices.$inferInsert;
 export type Sale = typeof sales.$inferSelect;
 export type NewSale = typeof sales.$inferInsert;
 export type SyncLogEntry = typeof syncLog.$inferSelect;
+
+export const staffUsers = sqliteTable('staff_users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  role: text('role').notNull().default('viewer'),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: text('created_at').notNull(),
+  lastLogin: text('last_login'),
+});
+
+export type StaffUser = typeof staffUsers.$inferSelect;
+export type NewStaffUser = typeof staffUsers.$inferInsert;

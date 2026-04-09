@@ -29,7 +29,7 @@ app.use('*', (c, next) => {
       return allowed;
     },
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'X-Admin-Key'],
+    allowHeaders: ['Content-Type', 'X-Admin-Key', 'Authorization'],
     maxAge: 86400,
   });
   return corsMiddleware(c, next);

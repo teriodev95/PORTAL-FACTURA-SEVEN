@@ -1,9 +1,19 @@
 import { Hono } from 'hono';
-import type { Env } from '../../lib/env';
+import type { AdminEnv } from './middleware';
 import { adminAuth } from './middleware';
 import { createAdminService } from './service';
+import { authRoutes } from './auth-routes';
+import { userRoutes } from './user-routes';
 
-const adminRoutes = new Hono<{ Bindings: Env }>();
+const adminRoutes = new Hono<AdminEnv>();
+
+// Auth routes — login and seed are public, /me uses its own middleware
+adminRoutes.route('/auth', authRoutes);
+
+// User management routes — has its own adminAuth + requireAdmin
+adminRoutes.route('/users', userRoutes);
+
+// All remaining routes require authentication
 adminRoutes.use('*', adminAuth);
 
 adminRoutes.get('/dashboard', async (c) => {
