@@ -85,7 +85,7 @@
 		{ value: '99', label: 'Por definir' },
 	];
 
-	function parseItems(json: string): Array<{ description: string; quantity: number; unitPrice: number; total: number }> {
+	function parseItems(json: string): Array<{ description: string; quantity: number; unitPrice: number; salePrice: number }> {
 		try {
 			return JSON.parse(json) || [];
 		} catch {
@@ -138,8 +138,8 @@
 		fiscalLegalName = '';
 		fiscalZip = '';
 		fiscalTaxSystem = '';
-		fiscalCfdiUse = '';
-		fiscalPaymentForm = '';
+		fiscalCfdiUse = 'G03';
+		fiscalPaymentForm = sale.paymentForm || '01';
 		fiscalEmail = sale.customerEmail || '';
 
 		// Try to load existing fiscal data
@@ -407,7 +407,7 @@
 										<p class="text-white truncate">{item.description}</p>
 										<p class="text-xs text-gray-muted">{item.quantity} x {fmtCurrency.format(item.unitPrice)}</p>
 									</div>
-									<p class="text-white font-medium ml-3 shrink-0">{fmtCurrency.format(item.total)}</p>
+									<p class="text-white font-medium ml-3 shrink-0">{fmtCurrency.format(item.salePrice)}</p>
 								</div>
 							{/each}
 						</div>
