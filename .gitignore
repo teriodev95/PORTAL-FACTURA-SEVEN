@@ -15,7 +15,6 @@ build/
 *.pfx
 *.zip
 Chat de WhatsApp*/
-output/
 
 # LaTeX auxiliares
 *.aux
